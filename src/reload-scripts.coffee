@@ -2,12 +2,13 @@
 #   Allows Hubot to (re)load scripts without restart
 #
 # Commands:
-#   hubot reload - Reloads scripts without restart. Loads new scripts too. (a fork version that works perfectly)
+#   hubot reload - Lädt alle Skripte und Gruppen neu
 #
 # Author:
 #   spajus
 #   vinta
 #   m-seldin
+#   Christian Koehler
 
 Fs       = require 'fs'
 Path     = require 'path'
@@ -29,7 +30,7 @@ module.exports = (robot) ->
         msg.send err
     catch error
       console.log "Hubot reloader:", error
-      msg.send "Could not reload all scripts: #{error}"
+      msg.send "Kann nicht alle Skripte neu starten: #{error}"
 
   success = (msg) ->
     # Cleanup old listeners and help
@@ -37,7 +38,7 @@ module.exports = (robot) ->
       listener = {}
     oldListeners = null
     oldCommands = null
-    msg.send "Reloaded all scripts"
+    msg.send "Alle Skripte erfolgreich neu gestartet"
 
 
   walkSync = (dir, filelist) ->
@@ -53,6 +54,7 @@ module.exports = (robot) ->
       else
         #add full path file to returning collection
         filelist.push(fullPath)
+    console.log("--------------------------FileList-----------------------------------")
     return filelist
 
   # ref: https://github.com/srobroek/hubot/blob/e543dff46fba9e435a352e6debe5cf210e40f860/src/robot.coffee
@@ -113,6 +115,9 @@ module.exports = (robot) ->
             try
               robot.logger.debug "DATA : #{data}"
               scripts = JSON.parse data
+
+              #Entfernt das Plugin Hubot Audit aus der Liste der Elemente, da dieses Plugin nach einen Neustart nicht mehr funktioniert
+              scripts.splice(index, 1) for index, value of scripts when value in ["hubot-audit"]
 
               if scripts instanceof Array
                 for pkg in scripts
